@@ -9,6 +9,16 @@ const styles = StyleSheet.create({
     width: Dimensions.get('window').width,
     height: Dimensions.get('window').height,
   },
+  inputStyle: {
+    height: 40,
+    width: 100,
+    borderColor: 'gray',
+    borderWidth: 1,
+    backgroundColor: 'white',
+    // position: "absolute",
+    //       top: 50,
+    //       left: 50,
+  }
 });
 
 export default styles

@@ -28,9 +28,8 @@ export default function App(props) {
 
     return (
       <View style={styles.container}>
-        <AppNavigator />
-        <MapScreen
-        />
+        {/* <AppNavigator /> */}
+        <MapScreen />
       </View>
       // <View style={styles.container}>
       //   {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
