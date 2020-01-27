@@ -27,7 +27,8 @@ export default class MapScreen extends React.Component {
         latitude: 40.705086,
         longitude: -74.009151},
       startText: "",
-      endText: ""
+      endText: "",
+      timeEstimate: ""
     }
     this.handleClick = this.handleClick.bind(this)
   }
@@ -56,26 +57,31 @@ export default class MapScreen extends React.Component {
 
   async getDirections(startLoc, destinationLoc) {
     try {
-        console.log("CALLING AGAIN!")
-         const resp = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${this.encodeLocation(startLoc)}&destination=${this.encodeLocation(destinationLoc)}&mode=transit&key=${googleMapsApiKey}`);
-         const respJson = await resp.json();
-         if (respJson.routes.length > 0) {
-             const points = polyline.decode(respJson.routes[0].overview_polyline.points);
-             const coords = points.map((point, index) => {
-                 return {
-                     latitude: point[0],
-                     longitude: point[1],
-                 };
-             });
-            this.setState({
-              polylineCoords: coords,
-              startCoord: coords[0],
-              endCoord: coords[coords.length - 1]
-             });
-         }
-         return;
+      console.log("CALLING AGAIN!")
+
+      const resp = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${this.encodeLocation(startLoc)}&destination=${this.encodeLocation(destinationLoc)}&mode=transit&key=${googleMapsApiKey}`);
+      const respJson = await resp.json();
+      if (respJson.routes.length > 0) {
+        const points = polyline.decode(respJson.routes[0].overview_polyline.points);
+        const coords = points.map((point, index) => {
+          return {
+            latitude: point[0],
+            longitude: point[1],
+          };
+        });
+        this.setState({
+          polylineCoords: coords,
+          startCoord: coords[0],
+          endCoord: coords[coords.length - 1],
+          timeEstimate: respJson.routes[0].legs[0].duration.text
+        });
+        console.log(this.state.timeEstimate)
+      } else {
+        alert("Locations not recognized")
+      }
+      return;
      } catch (error) {
-         alert(error);
+      alert(error);
      }
   }
 
@@ -161,6 +167,7 @@ export default class MapScreen extends React.Component {
           }}
           placeholder="Start"
           autoCorrect={false}
+          value={this.state.startText}
           onChange={(event) => this.handleChange(event,"startText")}
           ></TextInput>
         <TextInput style={{...styles.inputStyle,
@@ -174,6 +181,12 @@ export default class MapScreen extends React.Component {
             title="Go"
             onPress={this.handleClick}
           />
+          { this.state.polylineCoords.length > 0 ?
+          <Text>
+            The machine thinks this trip is going to take you {this.state.timeEstimate}. Think you can beat it?!?
+          </Text>:
+          <></>
+          }
           </View>
 
       </View>

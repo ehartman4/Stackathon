@@ -15,9 +15,6 @@ const styles = StyleSheet.create({
     borderColor: 'gray',
     borderWidth: 1,
     backgroundColor: 'white',
-    // position: "absolute",
-    //       top: 50,
-    //       left: 50,
   }
 });
 
