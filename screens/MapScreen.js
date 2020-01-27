@@ -32,11 +32,15 @@ async function getDirections(startLoc, destinationLoc) {
    }
 }
 
-export default function MapScreen(props) {
+export default class MapScreen extends React.Component {
 
+  constructor(props) {
+    super(props)
+  }
 
+  render() {
 
-    getDirections("Disneyland","Universal+Studios+Hollywood")
+    getDirections("125+W+76th+St","Universal+Studios+Hollywood")
     //console.log(typeof PROVIDER_GOOGLE)
     //let directionsService = new google.maps.DirectionsService()
     return (
@@ -59,5 +63,5 @@ export default function MapScreen(props) {
         // <AppNavigator />
       // </View>
     );
-
+  }
 }
