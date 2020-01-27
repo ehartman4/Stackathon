@@ -26,8 +26,10 @@ export default class MapScreen extends React.Component {
       endCoord: {
         latitude: 40.705086,
         longitude: -74.009151},
+      startText: "",
       endText: ""
     }
+    this.handleClick = this.handleClick.bind(this)
   }
 
   encodeLocation(addressString) {
@@ -57,7 +59,6 @@ export default class MapScreen extends React.Component {
         console.log("CALLING AGAIN!")
          const resp = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${this.encodeLocation(startLoc)}&destination=${this.encodeLocation(destinationLoc)}&mode=transit&key=${googleMapsApiKey}`);
          const respJson = await resp.json();
-        //  console.log(respJson)
          if (respJson.routes.length > 0) {
              const points = polyline.decode(respJson.routes[0].overview_polyline.points);
              const coords = points.map((point, index) => {
@@ -71,7 +72,6 @@ export default class MapScreen extends React.Component {
               startCoord: coords[0],
               endCoord: coords[coords.length - 1]
              });
-            // console.log(coords)
          }
          return;
      } catch (error) {
@@ -83,16 +83,7 @@ export default class MapScreen extends React.Component {
     try {
       // console.log(this.encodeLocation("Freddie & Pepper's"))
       // await this.getDirections("125+W+76th+St","Freddie+and+Peppers")
-      await this.getDirections("125 W 76th St","Grace Hopper Program")
-    } catch (error) {
-      alert(error)
-    }
-  }
-
-  async onClick() {
-    try {
-      await this.getDirections("125 W 76th St","Freddie & Peppers")
-
+      // await this.getDirections("125 W 76th St","Grace Hopper Program")
     } catch (error) {
       alert(error)
     }
@@ -101,7 +92,6 @@ export default class MapScreen extends React.Component {
   onMapLayout() {
     console.log("HERE")
     if (this.state.polylineCoords.length > 0) {
-      console.log("hello?")
       this.mapRef.fitToCoordinates(
         [this.state.startCoord,this.state.endCoord],
         {
@@ -118,9 +108,21 @@ export default class MapScreen extends React.Component {
       [name]: event.nativeEvent.text
     })
   }
+
+  async handleClick() {
+    try {
+      await this.getDirections(this.state.startText,this.state.endText)
+      this.setState({
+        startText: "",
+        endText: ""
+      })
+    } catch (error) {
+      alert(error)
+    }
+  }
+
   render() {
     //let directionsService = new google.maps.DirectionsService()
-    console.log(this.state.polylineCoords[0])
     return (
       <View style={styles.container}>
         <MapView
@@ -136,10 +138,16 @@ export default class MapScreen extends React.Component {
           onLayout={this.onMapLayout()}
           showsUserLocation={true}
         >
+          { this.state.polylineCoords.length > 0 ?
+          <>
           <Polyline coordinates = {this.state.polylineCoords}
           />
           <Marker coordinate={this.state.startCoord}/>
           <Marker coordinate={this.state.endCoord}/>
+          </>:
+          <Marker coordinate={{latitude: 40.705086,
+            longitude: -74.009151}}/>
+          }
 
           </MapView>
         {/* <AppNavigator /> */}
@@ -153,7 +161,6 @@ export default class MapScreen extends React.Component {
           }}
           placeholder="Start"
           autoCorrect={false}
-          onChange={this.handleChange}
           onChange={(event) => this.handleChange(event,"startText")}
           ></TextInput>
         <TextInput style={{...styles.inputStyle,
@@ -164,8 +171,8 @@ export default class MapScreen extends React.Component {
           onChange={(event) => this.handleChange(event,"endText")}
           ></TextInput>
           <Button
-
             title="Go"
+            onPress={this.handleClick}
           />
           </View>
 
