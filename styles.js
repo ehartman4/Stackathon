@@ -13,6 +13,8 @@ const styles = StyleSheet.create({
   inputStyle: {
     height: 40,
     width: 100,
+    padding: 5,
+    margin: 5,
     borderColor: 'gray',
     borderWidth: 1,
     backgroundColor: 'white',
