@@ -2,9 +2,9 @@ import React from 'react'
 
 import {googleMapsApiKey} from'../secrets'
 
-import {View, Text, TextInput} from 'react-native'
+import {Dimensions, View, Text, TextInput} from 'react-native'
 
-import {Button} from 'react-native-elements'
+import {Button, Overlay, Card} from 'react-native-elements'
 
 import MapView, { PROVIDER_GOOGLE, Polyline, Marker } from 'react-native-maps';
 import polyline from '@mapbox/polyline';
@@ -28,7 +28,9 @@ export default class MapScreen extends React.Component {
         longitude: -74.009151},
       startText: "",
       endText: "",
-      timeEstimate: ""
+      timeEstimate: "",
+      points: 0,
+      isVisible: false
     }
     this.handleClick = this.handleClick.bind(this)
   }
@@ -73,7 +75,8 @@ export default class MapScreen extends React.Component {
           polylineCoords: coords,
           startCoord: coords[0],
           endCoord: coords[coords.length - 1],
-          timeEstimate: respJson.routes[0].legs[0].duration.text
+          timeEstimate: respJson.routes[0].legs[0].duration.text,
+          isVisible: true
         });
         console.log(this.state.timeEstimate)
       } else {
@@ -120,7 +123,7 @@ export default class MapScreen extends React.Component {
       await this.getDirections(this.state.startText,this.state.endText)
       this.setState({
         startText: "",
-        endText: ""
+        endText: "",
       })
     } catch (error) {
       alert(error)
@@ -159,10 +162,14 @@ export default class MapScreen extends React.Component {
         {/* <AppNavigator /> */}
           <View style={{
           position: "absolute",
+          flex: 1,
+          flexDirection: "row",
+          justifyContent: "space-between",
           top: 50,
-          left: 50,
+          left: 40,
+          right: 40
           }}>
-
+        <View >
         <TextInput style={{...styles.inputStyle,
           }}
           placeholder="Start"
@@ -181,13 +188,62 @@ export default class MapScreen extends React.Component {
             title="Go"
             onPress={this.handleClick}
           />
-          { this.state.polylineCoords.length > 0 ?
-          <Text>
-            The machine thinks this trip is going to take you {this.state.timeEstimate}. Think you can beat it?!?
-          </Text>:
-          <></>
-          }
           </View>
+          <View>
+            <Text style={{
+              fontSize: 20
+            }}
+            >{this.state.points} pts</Text>
+          </View>
+          </View>
+
+          {/* <Overlay
+          isVisible={this.state.isVisible}
+          height={Dimensions.get('window').height*.4}
+          width={Dimensions.get('window').width*.6}
+          overlayBackgroundColor="#AED9E0"
+          overlayStyle={{
+
+          }}
+          onBackdropPress={()=>{this.setState({isVisible: false})}}
+          >
+            <Text>
+            The machine thinks this trip is going to take you
+            {this.state.timeEstimate}. Think you can beat it?!?
+            </Text>
+          </Overlay> */}
+          {this.state.isVisible ?
+          <View style={{
+            flex:1,
+            justifyContent: 'center',
+            backgroundColor:'steelblue'
+            }}>
+            <Text style={{
+              flex: 2,
+              color: 'white',
+              fontSize: 26,
+              textAlign: "center"
+              }}>
+            The machine thinks this trip is going to take you {this.state.timeEstimate.split(" ").map(word => {
+              if(word === "mins") {
+                return "minutes"
+              } else if (word === "hrs") {
+                return "hours"
+              } else {return word}
+            }).join(" ")}.{'\n'}
+            Think you can beat it?!?</Text>
+            <Button title="LET'S GO!"
+            containerStyle={{
+              flex: 1
+            }}
+            titleStyle={{
+              fontSize: 28,
+              fontWeight: "bold",
+            }}
+            />
+          </View>
+          : <></>}
+
 
       </View>
       // <View style={styles.container}>
