@@ -66,9 +66,24 @@ export default class MapScreen extends React.Component {
     }).join("")
   }
 
+  convertGoogleTimeToStopwatch(time) {
+    let timeArr = time.split(" ")
+    if(timeArr[0].length === 1) {
+      timeArr[0]= '0'.concat(timeArr[0])
+    }
+    if (time.includes("hr")) {
+      if(timeArr[2].length === 1) {
+        timeArr[2]= '0'.concat(timeArr[2])
+      }
+      return timeArr[0].concat(":",timeArr[2],":00")
+    } else {
+      return "00".concat(":",timeArr[0],":00")
+    }
+  }
+
   async getDirections(startLoc, destinationLoc) {
     try {
-      console.log("CALLING AGAIN!")
+      // console.log("CALLING AGAIN!")
 
       const resp = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${this.encodeLocation(startLoc)}&destination=${this.encodeLocation(destinationLoc)}&mode=transit&key=${googleMapsApiKey}`);
       const respJson = await resp.json();
@@ -87,7 +102,6 @@ export default class MapScreen extends React.Component {
           timeEstimate: respJson.routes[0].legs[0].duration.text,
           isVisible: true
         });
-        console.log(this.state.timeEstimate)
       } else {
         alert("Locations not recognized")
       }
@@ -108,9 +122,9 @@ export default class MapScreen extends React.Component {
   }
 
   onMapLayout() {
-    console.log("HERE")
     if (this.state.polylineCoords.length > 0) {
-      this.mapRef.fitToCoordinates(
+      //this.mapRef.fitToCoordinates(
+      this.refs.map.fitToCoordinates(
         [this.state.startCoord,this.state.endCoord],
         {
           edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
@@ -139,12 +153,19 @@ export default class MapScreen extends React.Component {
     }
   }
 
-  toggleStopwatch() {
-    this.setState({ stopwatchStart: !this.state.stopwatchStart, stopwatchReset: false});
+  async toggleStopwatch() {
+    await this.setState({ stopwatchStart: !this.state.stopwatchStart, stopwatchReset: false});
     if (!this.state.stopwatchStart) {
       const time = this.refs.stopwatch.formatTime()
-      this.setState({currentTime: time, hasEnded: true})
-
+      await this.setState({currentTime: time})
+      let googleTime = this.convertGoogleTimeToStopwatch(this.state.timeEstimate)
+      if(this.state.currentTime <= googleTime) {
+        alert("You beat Google!! \n You get 200 points!")
+        await this.setState({points: this.state.points + 200})
+      } else {
+        alert("Google beat you :( \n Here's 50 points for trying!")
+        await this.setState({points: this.state.points + 50})
+      }
     }
   }
 
@@ -166,7 +187,8 @@ export default class MapScreen extends React.Component {
             latitudeDelta: 0.0922,
             longitudeDelta: 0.0421,
           }}
-          ref={(ref) => { this.mapRef = ref }}
+          // ref={(ref) => { this.mapRef = ref }}
+          ref="map"
           onLayout={this.onMapLayout()}
           showsUserLocation={true}
         >
@@ -229,7 +251,7 @@ export default class MapScreen extends React.Component {
           overlayStyle={{
 
           }}
-          onBackdropPress={()=>{this.setState({stopWatchVisible: false})}}
+          onBackdropPress={()=>{this.setState({stopWatchVisible: false, isVisible: false})}}
           >
             <Stopwatch start={this.state.stopwatchStart}
           reset={this.state.stopwatchReset}
