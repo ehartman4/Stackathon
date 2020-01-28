@@ -2,9 +2,11 @@ import React from 'react'
 
 import {googleMapsApiKey} from'../secrets'
 
-import {Dimensions, View, Text, TextInput} from 'react-native'
+import {Dimensions, View, Text, TextInput, TouchableHighlight} from 'react-native'
 
 import {Button, Overlay, Card} from 'react-native-elements'
+
+import {Stopwatch} from 'react-native-stopwatch-timer'
 
 import MapView, { PROVIDER_GOOGLE, Polyline, Marker } from 'react-native-maps';
 import polyline from '@mapbox/polyline';
@@ -30,9 +32,16 @@ export default class MapScreen extends React.Component {
       endText: "",
       timeEstimate: "",
       points: 0,
-      isVisible: false
+      isVisible: false,
+      stopWatchVisible: false,
+      stopwatchStart: false,
+      stopwatchReset: false,
+      currentTime: "",
+      hasEnded: false
     }
     this.handleClick = this.handleClick.bind(this)
+    this.toggleStopwatch = this.toggleStopwatch.bind(this);
+    this.resetStopwatch = this.resetStopwatch.bind(this);
   }
 
   encodeLocation(addressString) {
@@ -130,6 +139,20 @@ export default class MapScreen extends React.Component {
     }
   }
 
+  toggleStopwatch() {
+    this.setState({ stopwatchStart: !this.state.stopwatchStart, stopwatchReset: false});
+    if (!this.state.stopwatchStart) {
+      const time = this.refs.stopwatch.formatTime()
+      this.setState({currentTime: time, hasEnded: true})
+
+    }
+  }
+
+  resetStopwatch() {
+
+    this.setState({stopwatchStart: false, stopwatchReset: true, });
+  }
+
   render() {
     //let directionsService = new google.maps.DirectionsService()
     return (
@@ -197,21 +220,29 @@ export default class MapScreen extends React.Component {
           </View>
           </View>
 
-          {/* <Overlay
-          isVisible={this.state.isVisible}
+          <Overlay
+          isVisible={this.state.stopWatchVisible}
           height={Dimensions.get('window').height*.4}
           width={Dimensions.get('window').width*.6}
-          overlayBackgroundColor="#AED9E0"
+          overlayBackgroundColor="rgba(0,0,0,0)"
+          windowBackgroundColor="rgba(0,0,0,0.2)"
           overlayStyle={{
 
           }}
-          onBackdropPress={()=>{this.setState({isVisible: false})}}
+          onBackdropPress={()=>{this.setState({stopWatchVisible: false})}}
           >
-            <Text>
-            The machine thinks this trip is going to take you
-            {this.state.timeEstimate}. Think you can beat it?!?
-            </Text>
-          </Overlay> */}
+            <Stopwatch start={this.state.stopwatchStart}
+          reset={this.state.stopwatchReset}
+          options={options}
+          ref="stopwatch"
+          />
+          <TouchableHighlight onPress={this.toggleStopwatch}>
+            <Text style={{fontSize: 30}}>{!this.state.stopwatchStart ? "Start" : "I've arrived!"}</Text>
+          </TouchableHighlight>
+          <TouchableHighlight onPress={this.resetStopwatch}>
+            <Text style={{fontSize: 30}}>Reset</Text>
+          </TouchableHighlight>
+          </Overlay>
           {this.state.isVisible ?
           <View style={{
             flex:1,
@@ -233,6 +264,7 @@ export default class MapScreen extends React.Component {
             }).join(" ")}.{'\n'}
             Think you can beat it?!?</Text>
             <Button title="LET'S GO!"
+            onPress={()=>{this.setState({stopWatchVisible: true})}}
             containerStyle={{
               flex: 1
             }}
@@ -253,3 +285,19 @@ export default class MapScreen extends React.Component {
     );
   }
 }
+
+const handleTimerComplete = () => alert("custom completion function");
+
+const options = {
+  container: {
+    backgroundColor: '#000',
+    padding: 5,
+    borderRadius: 5,
+    width: 220,
+  },
+  text: {
+    fontSize: 30,
+    color: '#FFF',
+    marginLeft: 7,
+  }
+};
