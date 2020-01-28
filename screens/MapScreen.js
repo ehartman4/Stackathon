@@ -2,9 +2,11 @@ import React from 'react'
 
 import {googleMapsApiKey} from'../secrets'
 
-import {View, Text, TextInput} from 'react-native'
+import {Dimensions, View, Text, TextInput, TouchableHighlight} from 'react-native'
 
-import {Button} from 'react-native-elements'
+import {Button, Overlay, Card} from 'react-native-elements'
+
+import {Stopwatch} from 'react-native-stopwatch-timer'
 
 import MapView, { PROVIDER_GOOGLE, Polyline, Marker } from 'react-native-maps';
 import polyline from '@mapbox/polyline';
@@ -26,8 +28,20 @@ export default class MapScreen extends React.Component {
       endCoord: {
         latitude: 40.705086,
         longitude: -74.009151},
-      endText: ""
+      startText: "",
+      endText: "",
+      timeEstimate: "",
+      points: 0,
+      isVisible: false,
+      stopWatchVisible: false,
+      stopwatchStart: false,
+      stopwatchReset: false,
+      currentTime: "",
+      hasEnded: false
     }
+    this.handleClick = this.handleClick.bind(this)
+    this.toggleStopwatch = this.toggleStopwatch.bind(this);
+    this.resetStopwatch = this.resetStopwatch.bind(this);
   }
 
   encodeLocation(addressString) {
@@ -52,30 +66,48 @@ export default class MapScreen extends React.Component {
     }).join("")
   }
 
+  convertGoogleTimeToStopwatch(time) {
+    let timeArr = time.split(" ")
+    if(timeArr[0].length === 1) {
+      timeArr[0]= '0'.concat(timeArr[0])
+    }
+    if (time.includes("hr")) {
+      if(timeArr[2].length === 1) {
+        timeArr[2]= '0'.concat(timeArr[2])
+      }
+      return timeArr[0].concat(":",timeArr[2],":00")
+    } else {
+      return "00".concat(":",timeArr[0],":00")
+    }
+  }
+
   async getDirections(startLoc, destinationLoc) {
     try {
-        console.log("CALLING AGAIN!")
-         const resp = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${this.encodeLocation(startLoc)}&destination=${this.encodeLocation(destinationLoc)}&mode=transit&key=${googleMapsApiKey}`);
-         const respJson = await resp.json();
-        //  console.log(respJson)
-         if (respJson.routes.length > 0) {
-             const points = polyline.decode(respJson.routes[0].overview_polyline.points);
-             const coords = points.map((point, index) => {
-                 return {
-                     latitude: point[0],
-                     longitude: point[1],
-                 };
-             });
-            this.setState({
-              polylineCoords: coords,
-              startCoord: coords[0],
-              endCoord: coords[coords.length - 1]
-             });
-            // console.log(coords)
-         }
-         return;
+      // console.log("CALLING AGAIN!")
+
+      const resp = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${this.encodeLocation(startLoc)}&destination=${this.encodeLocation(destinationLoc)}&mode=transit&key=${googleMapsApiKey}`);
+      const respJson = await resp.json();
+      if (respJson.routes.length > 0) {
+        const points = polyline.decode(respJson.routes[0].overview_polyline.points);
+        const coords = points.map((point, index) => {
+          return {
+            latitude: point[0],
+            longitude: point[1],
+          };
+        });
+        this.setState({
+          polylineCoords: coords,
+          startCoord: coords[0],
+          endCoord: coords[coords.length - 1],
+          timeEstimate: respJson.routes[0].legs[0].duration.text,
+          isVisible: true
+        });
+      } else {
+        alert("Locations not recognized")
+      }
+      return;
      } catch (error) {
-         alert(error);
+      alert(error);
      }
   }
 
@@ -83,26 +115,16 @@ export default class MapScreen extends React.Component {
     try {
       // console.log(this.encodeLocation("Freddie & Pepper's"))
       // await this.getDirections("125+W+76th+St","Freddie+and+Peppers")
-      await this.getDirections("125 W 76th St","Grace Hopper Program")
-    } catch (error) {
-      alert(error)
-    }
-  }
-
-  async onClick() {
-    try {
-      await this.getDirections("125 W 76th St","Freddie & Peppers")
-
+      // await this.getDirections("125 W 76th St","Grace Hopper Program")
     } catch (error) {
       alert(error)
     }
   }
 
   onMapLayout() {
-    console.log("HERE")
     if (this.state.polylineCoords.length > 0) {
-      console.log("hello?")
-      this.mapRef.fitToCoordinates(
+      //this.mapRef.fitToCoordinates(
+      this.refs.map.fitToCoordinates(
         [this.state.startCoord,this.state.endCoord],
         {
           edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
@@ -118,9 +140,42 @@ export default class MapScreen extends React.Component {
       [name]: event.nativeEvent.text
     })
   }
+
+  async handleClick() {
+    try {
+      await this.getDirections(this.state.startText,this.state.endText)
+      this.setState({
+        startText: "",
+        endText: "",
+      })
+    } catch (error) {
+      alert(error)
+    }
+  }
+
+  async toggleStopwatch() {
+    await this.setState({ stopwatchStart: !this.state.stopwatchStart, stopwatchReset: false});
+    if (!this.state.stopwatchStart) {
+      const time = this.refs.stopwatch.formatTime()
+      await this.setState({currentTime: time})
+      let googleTime = this.convertGoogleTimeToStopwatch(this.state.timeEstimate)
+      if(this.state.currentTime <= googleTime) {
+        alert("You beat Google!! \n You get 200 points!")
+        await this.setState({points: this.state.points + 200})
+      } else {
+        alert("Google beat you :( \n Here's 50 points for trying!")
+        await this.setState({points: this.state.points + 50})
+      }
+    }
+  }
+
+  resetStopwatch() {
+
+    this.setState({stopwatchStart: false, stopwatchReset: true, });
+  }
+
   render() {
     //let directionsService = new google.maps.DirectionsService()
-    console.log(this.state.polylineCoords[0])
     return (
       <View style={styles.container}>
         <MapView
@@ -132,28 +187,39 @@ export default class MapScreen extends React.Component {
             latitudeDelta: 0.0922,
             longitudeDelta: 0.0421,
           }}
-          ref={(ref) => { this.mapRef = ref }}
+          // ref={(ref) => { this.mapRef = ref }}
+          ref="map"
           onLayout={this.onMapLayout()}
           showsUserLocation={true}
         >
+          { this.state.polylineCoords.length > 0 ?
+          <>
           <Polyline coordinates = {this.state.polylineCoords}
           />
           <Marker coordinate={this.state.startCoord}/>
           <Marker coordinate={this.state.endCoord}/>
+          </>:
+          <Marker coordinate={{latitude: 40.705086,
+            longitude: -74.009151}}/>
+          }
 
           </MapView>
         {/* <AppNavigator /> */}
           <View style={{
           position: "absolute",
+          flex: 1,
+          flexDirection: "row",
+          justifyContent: "space-between",
           top: 50,
-          left: 50,
+          left: 40,
+          right: 40
           }}>
-
+        <View >
         <TextInput style={{...styles.inputStyle,
           }}
           placeholder="Start"
           autoCorrect={false}
-          onChange={this.handleChange}
+          value={this.state.startText}
           onChange={(event) => this.handleChange(event,"startText")}
           ></TextInput>
         <TextInput style={{...styles.inputStyle,
@@ -164,10 +230,74 @@ export default class MapScreen extends React.Component {
           onChange={(event) => this.handleChange(event,"endText")}
           ></TextInput>
           <Button
-
             title="Go"
+            onPress={this.handleClick}
           />
           </View>
+          <View>
+            <Text style={{
+              fontSize: 20
+            }}
+            >{this.state.points} pts</Text>
+          </View>
+          </View>
+
+          <Overlay
+          isVisible={this.state.stopWatchVisible}
+          height={Dimensions.get('window').height*.4}
+          width={Dimensions.get('window').width*.6}
+          overlayBackgroundColor="rgba(0,0,0,0)"
+          windowBackgroundColor="rgba(0,0,0,0.2)"
+          overlayStyle={{
+
+          }}
+          onBackdropPress={()=>{this.setState({stopWatchVisible: false, isVisible: false})}}
+          >
+            <Stopwatch start={this.state.stopwatchStart}
+          reset={this.state.stopwatchReset}
+          options={options}
+          ref="stopwatch"
+          />
+          <TouchableHighlight onPress={this.toggleStopwatch}>
+            <Text style={{fontSize: 30}}>{!this.state.stopwatchStart ? "Start" : "I've arrived!"}</Text>
+          </TouchableHighlight>
+          <TouchableHighlight onPress={this.resetStopwatch}>
+            <Text style={{fontSize: 30}}>Reset</Text>
+          </TouchableHighlight>
+          </Overlay>
+          {this.state.isVisible ?
+          <View style={{
+            flex:1,
+            justifyContent: 'center',
+            backgroundColor:'steelblue'
+            }}>
+            <Text style={{
+              flex: 2,
+              color: 'white',
+              fontSize: 26,
+              textAlign: "center"
+              }}>
+            The machine thinks this trip is going to take you {this.state.timeEstimate.split(" ").map(word => {
+              if(word === "mins") {
+                return "minutes"
+              } else if (word === "hrs") {
+                return "hours"
+              } else {return word}
+            }).join(" ")}.{'\n'}
+            Think you can beat it?!?</Text>
+            <Button title="LET'S GO!"
+            onPress={()=>{this.setState({stopWatchVisible: true})}}
+            containerStyle={{
+              flex: 1
+            }}
+            titleStyle={{
+              fontSize: 28,
+              fontWeight: "bold",
+            }}
+            />
+          </View>
+          : <></>}
+
 
       </View>
       // <View style={styles.container}>
@@ -177,3 +307,19 @@ export default class MapScreen extends React.Component {
     );
   }
 }
+
+const handleTimerComplete = () => alert("custom completion function");
+
+const options = {
+  container: {
+    backgroundColor: '#000',
+    padding: 5,
+    borderRadius: 5,
+    width: 220,
+  },
+  text: {
+    fontSize: 30,
+    color: '#FFF',
+    marginLeft: 7,
+  }
+};

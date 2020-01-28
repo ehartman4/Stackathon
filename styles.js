@@ -6,8 +6,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   mapStyle: {
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
+    flex: 4
+    // width: Dimensions.get('window').width,
+    // height: Dimensions.get('window').height,
   },
   inputStyle: {
     height: 40,
@@ -15,9 +16,6 @@ const styles = StyleSheet.create({
     borderColor: 'gray',
     borderWidth: 1,
     backgroundColor: 'white',
-    // position: "absolute",
-    //       top: 50,
-    //       left: 50,
   }
 });
 
