@@ -234,9 +234,15 @@ export default class MapScreen extends React.Component {
             onPress={this.handleClick}
           />
           </View>
-          <View>
+          <View style={{
+            borderRadius:10,
+            backgroundColor: "rgba(70,130,180,0.8)",
+            height: 40
+          }}>
             <Text style={{
-              fontSize: 20
+              fontSize: 25,
+              padding: 5,
+              color: "white"
             }}
             >{this.state.points} pts</Text>
           </View>
@@ -256,13 +262,14 @@ export default class MapScreen extends React.Component {
             <Stopwatch start={this.state.stopwatchStart}
           reset={this.state.stopwatchReset}
           options={options}
+          msecs
           ref="stopwatch"
           />
           <TouchableHighlight onPress={this.toggleStopwatch}>
-            <Text style={{fontSize: 30}}>{!this.state.stopwatchStart ? "Start" : "I've arrived!"}</Text>
+            <Text style={{fontSize: 25}}>{!this.state.stopwatchStart ? "Start" : "I've arrived!"}</Text>
           </TouchableHighlight>
           <TouchableHighlight onPress={this.resetStopwatch}>
-            <Text style={{fontSize: 30}}>Reset</Text>
+            <Text style={{fontSize: 10}}>Reset</Text>
           </TouchableHighlight>
           </Overlay>
           {this.state.isVisible ?
@@ -285,16 +292,31 @@ export default class MapScreen extends React.Component {
               } else {return word}
             }).join(" ")}.{'\n'}
             Think you can beat it?!?</Text>
-            <Button title="LET'S GO!"
-            onPress={()=>{this.setState({stopWatchVisible: true})}}
-            containerStyle={{
-              flex: 1
+            <TouchableHighlight
+            onPress={()=>{
+              this.setState({stopWatchVisible: true})
+              this.toggleStopwatch()
             }}
-            titleStyle={{
+            style={{
+              flex: 1,
+              alignItems: "center"
+            }}
+            >
+              <Text
+              style={{
               fontSize: 28,
               fontWeight: "bold",
-            }}
-            />
+              textAlign: "center",
+              color: "white",
+              borderColor: "white",
+              borderWidth: 1,
+              borderRadius: 10,
+              width: 150,
+              shadowOffset:{width: 3, height: 3},
+              shadowOpacity: 1
+              }}
+              >LET'S GO!</Text>
+            </TouchableHighlight>
           </View>
           : <></>}
 
