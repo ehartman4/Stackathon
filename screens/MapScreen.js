@@ -1,17 +1,18 @@
 import React from 'react'
 
-import {googleMapsApiKey} from'../secrets'
+import { googleMapsApiKey } from '../secrets'
 
-import {Dimensions, View, Text, TextInput, TouchableHighlight} from 'react-native'
+import { Dimensions, View, Text, TouchableHighlight } from 'react-native'
 
-import {Button, Overlay, Card} from 'react-native-elements'
+import { Button, Overlay, Card } from 'react-native-elements'
 
-import {Stopwatch} from 'react-native-stopwatch-timer'
+import { Stopwatch } from 'react-native-stopwatch-timer'
 
 import MapView, { PROVIDER_GOOGLE, Polyline, Marker } from 'react-native-maps';
 import polyline from '@mapbox/polyline';
 
 import styles from '../styles'
+import LocationInput from '../components/LocationInput'
 
 
 
@@ -24,10 +25,12 @@ export default class MapScreen extends React.Component {
       polylineCoords: [],
       startCoord: {
         latitude: 40.705086,
-        longitude: -74.009151},
+        longitude: -74.009151
+      },
       endCoord: {
         latitude: 40.705086,
-        longitude: -74.009151},
+        longitude: -74.009151
+      },
       startText: "",
       endText: "",
       timeEstimate: "",
@@ -39,7 +42,6 @@ export default class MapScreen extends React.Component {
       currentTime: "",
       hasEnded: false
     }
-    this.handleClick = this.handleClick.bind(this)
     this.toggleStopwatch = this.toggleStopwatch.bind(this);
     this.resetStopwatch = this.resetStopwatch.bind(this);
   }
@@ -57,8 +59,8 @@ export default class MapScreen extends React.Component {
       "&": "%26",
       "?": "%3F"
     }
-    return addressString.split("").map((char)=> {
-      if(encodings[char]) {
+    return addressString.split("").map((char) => {
+      if (encodings[char]) {
         return encodings[char]
       } else {
         return char
@@ -68,16 +70,16 @@ export default class MapScreen extends React.Component {
 
   convertGoogleTimeToStopwatch(time) {
     let timeArr = time.split(" ")
-    if(timeArr[0].length === 1) {
-      timeArr[0]= '0'.concat(timeArr[0])
+    if (timeArr[0].length === 1) {
+      timeArr[0] = '0'.concat(timeArr[0])
     }
     if (time.includes("hr")) {
-      if(timeArr[2].length === 1) {
-        timeArr[2]= '0'.concat(timeArr[2])
+      if (timeArr[2].length === 1) {
+        timeArr[2] = '0'.concat(timeArr[2])
       }
-      return timeArr[0].concat(":",timeArr[2],":00")
+      return timeArr[0].concat(":", timeArr[2], ":00")
     } else {
-      return "00".concat(":",timeArr[0],":00")
+      return "00".concat(":", timeArr[0], ":00")
     }
   }
 
@@ -106,9 +108,9 @@ export default class MapScreen extends React.Component {
         alert("Locations not recognized")
       }
       return;
-     } catch (error) {
+    } catch (error) {
       alert(error);
-     }
+    }
   }
 
   async componentDidMount() {
@@ -125,7 +127,7 @@ export default class MapScreen extends React.Component {
     if (this.state.polylineCoords.length > 0) {
       //this.mapRef.fitToCoordinates(
       this.refs.map.fitToCoordinates(
-        [this.state.startCoord,this.state.endCoord],
+        [this.state.startCoord, this.state.endCoord],
         {
           edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
           animated: true
@@ -135,43 +137,25 @@ export default class MapScreen extends React.Component {
     return;
   }
 
-  handleChange(event,name) {
-    this.setState({
-      [name]: event.nativeEvent.text
-    })
-  }
-
-  async handleClick() {
-    try {
-      await this.getDirections(this.state.startText,this.state.endText)
-      this.setState({
-        startText: "",
-        endText: "",
-      })
-    } catch (error) {
-      alert(error)
-    }
-  }
-
   async toggleStopwatch() {
-    await this.setState({ stopwatchStart: !this.state.stopwatchStart, stopwatchReset: false});
+    await this.setState({ stopwatchStart: !this.state.stopwatchStart, stopwatchReset: false });
     if (!this.state.stopwatchStart) {
       const time = this.refs.stopwatch.formatTime()
-      await this.setState({currentTime: time})
+      await this.setState({ currentTime: time })
       let googleTime = this.convertGoogleTimeToStopwatch(this.state.timeEstimate)
-      if(this.state.currentTime <= googleTime) {
+      if (this.state.currentTime <= googleTime) {
         alert("You beat Google!! \n You get 200 points!")
-        await this.setState({points: this.state.points + 200})
+        await this.setState({ points: this.state.points + 200 })
       } else {
         alert("Google beat you :( \n Here's 50 points for trying!")
-        await this.setState({points: this.state.points + 50})
+        await this.setState({ points: this.state.points + 50 })
       }
     }
   }
 
   resetStopwatch() {
 
-    this.setState({stopwatchStart: false, stopwatchReset: true, });
+    this.setState({ stopwatchStart: false, stopwatchReset: true, });
   }
 
   render() {
@@ -192,20 +176,22 @@ export default class MapScreen extends React.Component {
           onLayout={this.onMapLayout()}
           showsUserLocation={true}
         >
-          { this.state.polylineCoords.length > 0 ?
-          <>
-          <Polyline coordinates = {this.state.polylineCoords}
-          />
-          <Marker coordinate={this.state.startCoord}/>
-          <Marker coordinate={this.state.endCoord}/>
-          </>:
-          <Marker coordinate={{latitude: 40.705086,
-            longitude: -74.009151}}/>
+          {this.state.polylineCoords.length > 0 ?
+            <>
+              <Polyline coordinates={this.state.polylineCoords}
+              />
+              <Marker coordinate={this.state.startCoord} />
+              <Marker coordinate={this.state.endCoord} />
+            </> :
+            <Marker coordinate={{
+              latitude: 40.705086,
+              longitude: -74.009151
+            }} />
           }
 
-          </MapView>
+        </MapView>
         {/* <AppNavigator /> */}
-          <View style={{
+        <View style={{
           position: "absolute",
           flex: 1,
           flexDirection: "row",
@@ -213,29 +199,13 @@ export default class MapScreen extends React.Component {
           top: 50,
           left: 40,
           right: 40
-          }}>
-        <View >
-        <TextInput style={{...styles.inputStyle,
-          }}
-          placeholder="Start"
-          autoCorrect={false}
-          value={this.state.startText}
-          onChange={(event) => this.handleChange(event,"startText")}
-          ></TextInput>
-        <TextInput style={{...styles.inputStyle,
-          }}
-          placeholder="End"
-          autoCorrect={false}
-          value={this.state.endText}
-          onChange={(event) => this.handleChange(event,"endText")}
-          ></TextInput>
-          <Button
-            title="Go"
-            onPress={this.handleClick}
-          />
+        }}>
+
+          <View >
+            <LocationInput />
           </View>
           <View style={{
-            borderRadius:10,
+            borderRadius: 10,
             backgroundColor: "rgba(70,130,180,0.8)",
             height: 40
           }}>
@@ -246,75 +216,75 @@ export default class MapScreen extends React.Component {
             }}
             >{this.state.points} pts</Text>
           </View>
-          </View>
+        </View>
 
-          <Overlay
+        <Overlay
           isVisible={this.state.stopWatchVisible}
-          height={Dimensions.get('window').height*.4}
-          width={Dimensions.get('window').width*.6}
+          height={Dimensions.get('window').height * .4}
+          width={Dimensions.get('window').width * .6}
           overlayBackgroundColor="rgba(0,0,0,0)"
           windowBackgroundColor="rgba(0,0,0,0.2)"
           overlayStyle={{
 
           }}
-          onBackdropPress={()=>{this.setState({stopWatchVisible: false, isVisible: false})}}
-          >
-            <Stopwatch start={this.state.stopwatchStart}
-          reset={this.state.stopwatchReset}
-          options={options}
-          msecs
-          ref="stopwatch"
+          onBackdropPress={() => { this.setState({ stopWatchVisible: false, isVisible: false }) }}
+        >
+          <Stopwatch start={this.state.stopwatchStart}
+            reset={this.state.stopwatchReset}
+            options={options}
+            msecs
+            ref="stopwatch"
           />
           <TouchableHighlight onPress={this.toggleStopwatch}>
-            <Text style={{fontSize: 25}}>{!this.state.stopwatchStart ? "Start" : "I've arrived!"}</Text>
+            <Text style={{ fontSize: 25 }}>{!this.state.stopwatchStart ? "Start" : "I've arrived!"}</Text>
           </TouchableHighlight>
           <TouchableHighlight onPress={this.resetStopwatch}>
-            <Text style={{fontSize: 10}}>Reset</Text>
+            <Text style={{ fontSize: 10 }}>Reset</Text>
           </TouchableHighlight>
-          </Overlay>
-          {this.state.isVisible ?
+        </Overlay>
+        {this.state.isVisible ?
           <View style={{
-            flex:1,
+            flex: 1,
             justifyContent: 'center',
-            backgroundColor:'steelblue'
-            }}>
+            backgroundColor: 'steelblue'
+          }}>
             <Text style={{
               flex: 2,
               color: 'white',
               fontSize: 26,
               textAlign: "center"
-              }}>
-            The machine thinks this trip is going to take you {this.state.timeEstimate.split(" ").map(word => {
-              if(word === "mins") {
-                return "minutes"
-              } else if (word === "hrs") {
-                return "hours"
-              } else {return word}
-            }).join(" ")}.{'\n'}
-            Think you can beat it?!?</Text>
+            }}>
+              The machine thinks this trip is going to take you {this.state.timeEstimate.split(" ").map(word => {
+                if (word === "mins") {
+                  return "minutes"
+                } else if (word === "hrs") {
+                  return "hours"
+                } else { return word }
+              }).join(" ")}.{'\n'}
+              Think you can beat it?!?</Text>
             <TouchableHighlight
-            onPress={()=>{
-              this.setState({stopWatchVisible: true})
-              this.toggleStopwatch()
-            }}
-            style={{
-              flex: 1,
-              alignItems: "center"
-            }}
+              onPress={() => {
+                this.setState({ stopWatchVisible: true })
+                this.toggleStopwatch()
+              }}
+              style={{
+                flex: 1,
+                alignItems: "center"
+              }}
             >
               <Text
-              style={{
-              fontSize: 28,
-              fontWeight: "bold",
-              textAlign: "center",
-              color: "white",
-              borderColor: "white",
-              borderWidth: 1,
-              borderRadius: 10,
-              width: 150,
-              shadowOffset:{width: 3, height: 3},
-              shadowOpacity: 1
-              }}
+                style={{
+                  fontSize: 28,
+                  fontWeight: "bold",
+                  textAlign: "center",
+                  color: "white",
+                  borderColor: "white",
+                  borderWidth: 1,
+                  borderRadius: 10,
+                  width: 150,
+                  shadowOffset: { width: 3, height: 3 },
+                  shadowOpacity: 1
+                }}
               >LET'S GO!</Text>
             </TouchableHighlight>
           </View>
@@ -324,7 +294,7 @@ export default class MapScreen extends React.Component {
       </View>
       // <View style={styles.container}>
       //   {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
-        // <AppNavigator />
+      // <AppNavigator />
       // </View>
     );
   }

@@ -4,7 +4,6 @@ import * as Font from 'expo-font';
 import React, { useState } from 'react';
 import { Platform, StatusBar, StyleSheet, Dimensions, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-// import google from ''
 import styles from './styles'
 
 import MapScreen from './screens/MapScreen'
@@ -27,14 +26,14 @@ export default function App(props) {
   } else {
 
     return (
-      <View style={styles.container}>
-        {/* <AppNavigator /> */}
-        <MapScreen />
-      </View>
       // <View style={styles.container}>
-      //   {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
-        // <AppNavigator />
+      //   <AppNavigator />
+      //   {/* <MapScreen /> */}
       // </View>
+      <View style={styles.container}>
+        {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
+        <AppNavigator />
+      </View>
     );
   }
 }
