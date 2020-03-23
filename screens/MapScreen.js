@@ -44,6 +44,8 @@ export default class MapScreen extends React.Component {
     }
     this.toggleStopwatch = this.toggleStopwatch.bind(this);
     this.resetStopwatch = this.resetStopwatch.bind(this);
+    this.handleClick = this.handleClick.bind(this)
+    this.handleChange = this.handleChange.bind(this)
   }
 
   encodeLocation(addressString) {
@@ -110,6 +112,24 @@ export default class MapScreen extends React.Component {
       return;
     } catch (error) {
       alert(error);
+    }
+  }
+
+  handleChange(event, name) {
+    this.setState({
+      [name]: event.nativeEvent.text
+    })
+  }
+
+  async handleClick() {
+    try {
+      await this.getDirections(this.state.startText, this.state.endText)
+      this.setState({
+        startText: "",
+        endText: "",
+      })
+    } catch (error) {
+      alert(error)
     }
   }
 
@@ -202,7 +222,12 @@ export default class MapScreen extends React.Component {
         }}>
 
           <View >
-            <LocationInput />
+            <LocationInput
+              startText={this.state.startText}
+              endText={this.state.endText}
+              handleChange={this.handleChange}
+              handleClick={this.handleClick}
+            />
           </View>
           <View style={{
             borderRadius: 10,
@@ -255,12 +280,12 @@ export default class MapScreen extends React.Component {
               textAlign: "center"
             }}>
               The machine thinks this trip is going to take you {this.state.timeEstimate.split(" ").map(word => {
-                if (word === "mins") {
-                  return "minutes"
-                } else if (word === "hrs") {
-                  return "hours"
-                } else { return word }
-              }).join(" ")}.{'\n'}
+              if (word === "mins") {
+                return "minutes"
+              } else if (word === "hrs") {
+                return "hours"
+              } else { return word }
+            }).join(" ")}.{'\n'}
               Think you can beat it?!?</Text>
             <TouchableHighlight
               onPress={() => {
